@@ -1,30 +1,24 @@
-#Libraries
-import RPi.GPIO as GPIO
-import time
+from gpiozero import Servo
+from time import sleep
  
-#GPIO Mode (BOARD / BCM)
-GPIO.setmode(GPIO.BCM)
-servoPIN = 2
-GPIO.setup(servoPIN,GPIO.OUT)
-pwm = GPIO.PWM(servoPIN,50)
-pwm.start(0)
-
-def SetAngle(angle):
-    duty = angle / 18 + 2
-    GPIO.output(servoPIN, GPIO.HIGH)
-    pwm.ChangeDutyCycle(duty)
-    time.sleep(1)
-    GPIO.output(servoPIN, GPIO.LOW)
-    pwm.ChangeDutyCycle(0)
-
-SetAngle(90)
-
-if __name__ == '__main__':
-   
-    while True:
-        pwm.ChangeDutyCycle(7.5) #Neutral
-        time.sleep(1)
-        pwm.ChangeDutyCycle(12.5) #180
-        time.sleep(1)
-        pwm.ChangeDutyCycle(2.5) #0
-        time.sleep(1)        
+myGPIO=2
+ 
+myCorrection=0.45
+maxPW=(2.0+myCorrection)/1000
+minPW=(1.0-myCorrection)/1000
+ 
+servo = Servo(myGPIO,min_pulse_width=minPW,max_pulse_width=maxPW)
+ 
+while True:
+    servo.mid()
+    print("mid")
+    sleep(2)
+    servo.min()
+    print("min")
+    sleep(2)
+    servo.mid()
+    print("mid")
+    sleep(2)
+    servo.max()
+    print("max")
+    sleep(2)
