@@ -1,24 +1,28 @@
-from gpiozero import Servo
-from time import sleep
- 
-myGPIO=2
- 
-myCorrection=0.45
-maxPW=(2.0+myCorrection)/1000
-minPW=(1.0-myCorrection)/1000
- 
-servo = Servo(myGPIO,min_pulse_width=minPW,max_pulse_width=maxPW)
- 
-while True:
-    servo.mid()
-    print("mid")
-    sleep(2)
-    servo.min()
-    print("min")
-    sleep(2)
-    servo.mid()
-    print("mid")
-    sleep(2)
-    servo.max()
-    print("max")
-    sleep(2)
+#!/usr/bin/python
+
+import pigpio
+import time
+
+pi = pigpio.pi()
+pi.set_mode(2, pigpio.OUTPUT)
+pi.get_mode(2)
+
+while True : 
+
+   pi.set_servo_pulsewidth(2, 1500)  #mid
+   pi.get_servo_pulsewidth(2)
+   time.sleep(2)
+
+   pi.set_servo_pulsewidth(2, 500)  #right
+   pi.get_servo_pulsewidth(2)
+   time.sleep(2)
+
+   pi.set_servo_pulsewidth(2, 1500)  #mid
+   pi.get_servo_pulsewidth(2)
+   time.sleep(2)
+   
+   pi.set_servo_pulsewidth(2, 2500) #left
+   pi.get_servo_pulsewidth(2)
+   time.sleep(2)
+
+pi.stop()
