@@ -13,7 +13,7 @@ GPIO.setwarnings(False)
 TRIG = 3
 ECHO = 4
 maxTime = 0.04
-minDistance = 27
+minDistance = 20
 
 #Servo
 pi = pigpio.pi()
@@ -21,25 +21,25 @@ pi.set_mode(2, pigpio.OUTPUT)
 pi.get_mode(2)
 
 #Motors
-#MotorA
-in1 = 9
-in2 = 10
-enA = 11
+# #MotorA
+# in1 = 9
+# in2 = 10
+# enA = 11
 
-#MotorB
-in3 = 22
-in4 = 27
-enB = 17
+# #MotorB
+# in3 = 22
+# in4 = 27
+# enB = 17
 
-#MotorC
-in5 = 24
-in6 = 23
-enC = 25
+#Motor A and C
+in1 = 24
+in2 = 23
+enA = 25
 
-#MotorD
-in7 = 18
-in8 = 15
-enD = 14
+#Motor B and D
+in3 = 18
+in4 = 15
+enB = 14
 
 #Motors
 GPIO.setup(in1,GPIO.OUT)
@@ -48,31 +48,19 @@ GPIO.setup(enA,GPIO.OUT)
 GPIO.setup(in3,GPIO.OUT)
 GPIO.setup(in4,GPIO.OUT)
 GPIO.setup(enB,GPIO.OUT)
-GPIO.setup(in5,GPIO.OUT)
-GPIO.setup(in6,GPIO.OUT)
-GPIO.setup(enC,GPIO.OUT)
-GPIO.setup(in7,GPIO.OUT)
-GPIO.setup(in8,GPIO.OUT)
-GPIO.setup(enD,GPIO.OUT)
+
 
 GPIO.output(in1,GPIO.LOW)
 GPIO.output(in2,GPIO.LOW)
 GPIO.output(in3,GPIO.LOW)
 GPIO.output(in4,GPIO.LOW)
-GPIO.output(in5,GPIO.LOW)
-GPIO.output(in6,GPIO.LOW)
-GPIO.output(in7,GPIO.LOW)
-GPIO.output(in8,GPIO.LOW)
+
 
 pA=GPIO.PWM(enA,100)
 pB=GPIO.PWM(enB,100)
-pC=GPIO.PWM(enC,100)
-pD=GPIO.PWM(enD,100)
 
 pA.start(100)
 pB.start(100)
-pC.start(100)
-pD.start(100)
 
 
 def goForward():
@@ -83,15 +71,7 @@ def goForward():
     GPIO.output(in3,GPIO.HIGH)
     GPIO.output(in4,GPIO.LOW)
     GPIO.output(enB,GPIO.HIGH)
-
-    GPIO.output(in5,GPIO.HIGH)
-    GPIO.output(in6,GPIO.LOW)
-    GPIO.output(enC,GPIO.HIGH)
-
-    GPIO.output(in7,GPIO.HIGH)
-    GPIO.output(in8,GPIO.LOW)
-    GPIO.output(enD,GPIO.HIGH)
-
+    
 
 def goBack():
     GPIO.output(in1,GPIO.LOW)
@@ -102,14 +82,7 @@ def goBack():
     GPIO.output(in4,GPIO.HIGH)
     GPIO.output(enB,GPIO.HIGH)
 
-    GPIO.output(in5,GPIO.LOW)
-    GPIO.output(in6,GPIO.HIGH)
-    GPIO.output(enC,GPIO.HIGH)
-
-    GPIO.output(in7,GPIO.LOW)
-    GPIO.output(in8,GPIO.HIGH)
-    GPIO.output(enD,GPIO.HIGH)
-
+    
 def goLeft():
     GPIO.output(in1,GPIO.LOW)
     GPIO.output(in2,GPIO.LOW)
@@ -119,14 +92,27 @@ def goLeft():
     GPIO.output(in4,GPIO.LOW)
     GPIO.output(enB,GPIO.HIGH)
 
-    GPIO.output(in5,GPIO.LOW)
-    GPIO.output(in6,GPIO.LOW)
-    GPIO.output(enC,GPIO.HIGH)
 
-    GPIO.output(in7,GPIO.HIGH)
-    GPIO.output(in8,GPIO.LOW)
-    GPIO.output(enD,GPIO.HIGH)
+def pivotLeft():
+    GPIO.output(in1,GPIO.LOW)
+    GPIO.output(in2,GPIO.HIGH)
+    GPIO.output(enA,GPIO.HIGH)
 
+    GPIO.output(in3,GPIO.HIGH)
+    GPIO.output(in4,GPIO.LOW)
+    GPIO.output(enB,GPIO.HIGH)  
+
+
+def pivotRight():
+    GPIO.output(in1,GPIO.HIGH)
+    GPIO.output(in2,GPIO.LOW)
+    GPIO.output(enA,GPIO.HIGH) 
+
+    GPIO.output(in3,GPIO.LOW)
+    GPIO.output(in4,GPIO.HIGH)
+    GPIO.output(enB,GPIO.HIGH)
+
+    
 def goRight():
     GPIO.output(in1,GPIO.HIGH)
     GPIO.output(in2,GPIO.LOW)
@@ -136,16 +122,7 @@ def goRight():
     GPIO.output(in4,GPIO.LOW)
     GPIO.output(enB,GPIO.HIGH)
 
-    GPIO.output(in5,GPIO.HIGH)
-    GPIO.output(in6,GPIO.LOW)
-    GPIO.output(enC,GPIO.HIGH)
-
-    GPIO.output(in7,GPIO.LOW)
-    GPIO.output(in8,GPIO.LOW)
-    GPIO.output(enD,GPIO.HIGH)
-
-
-
+    
 def stop():
     GPIO.output(in1,GPIO.LOW)
     GPIO.output(in2,GPIO.LOW)
@@ -155,14 +132,7 @@ def stop():
     GPIO.output(in4,GPIO.LOW)
     GPIO.output(enB,GPIO.HIGH)
 
-    GPIO.output(in5,GPIO.LOW)
-    GPIO.output(in6,GPIO.LOW)
-    GPIO.output(enC,GPIO.HIGH)
-
-    GPIO.output(in7,GPIO.LOW)
-    GPIO.output(in8,GPIO.LOW)
-    GPIO.output(enD,GPIO.HIGH)
-
+    
 def getDistance():
     GPIO.setup(TRIG,GPIO.OUT)
     GPIO.setup(ECHO,GPIO.IN)
@@ -244,12 +214,14 @@ if __name__ == '__main__':
 
 
             elif(maxDistLeft <= maxDistRight):
-                goRight()
-                time.sleep(1.4)
+                #goRight()
+                pivotRight()
+                time.sleep(1)
 
             else:
-                goLeft()
-                time.sleep(1.4)
+                #goLeft()
+                pivotLeft()
+                time.sleep(1)
         
         else:
             print("moving Forward")
