@@ -2,6 +2,7 @@
 import RPi.GPIO as GPIO
 import time
 import pigpio
+import numpy as np
  
 #GPIO Mode (BOARD / BCM)
 GPIO.setmode(GPIO.BCM)
@@ -13,7 +14,7 @@ GPIO.setwarnings(False)
 TRIG = 3
 ECHO = 4
 maxTime = 0.04
-minDistance = 20
+minDistance = 10
 
 #Servo
 pi = pigpio.pi()
@@ -61,6 +62,21 @@ pB=GPIO.PWM(enB,100)
 
 pA.start(100)
 pB.start(100)
+
+G_length = 80  #full grid length
+gridLength = G_length - minDistance - 10 - 40#effective grid length 10 is leeway
+traversedDistance = 0
+
+row, col = (20,20)
+maze = [[-1 for i in range(col)] for j in range(row)] 
+direction = 0 #  0-forward(+i) 1-right(+j) 2-back(-i) 3-left(-j) 
+i = 0
+j = 0
+maze[0][0] = 2 #2 is home
+
+rightTurnTime = 0.8
+leftTurnTime = 0.8
+
 
 
 def goForward():
@@ -175,6 +191,10 @@ if __name__ == '__main__':
         #print("distance = ",distance)
         if( distance <= minDistance):
             stop()
+            maze[i][j] = 0             #mark grid as occupied
+            print("\t\t",i," ",j)
+            np.savetxt('maze.txt', maze, fmt='%s')
+            traversedDistance = 0      #reset
             print("stop")
             goBack()
             time.sleep(0.5)
@@ -190,7 +210,7 @@ if __name__ == '__main__':
             time.sleep(2)
 
             maxDistRight = getDistance()
-            print("Right = ",maxDistRight)
+            #print("Right = ",maxDistRight)
 
             pi.set_servo_pulsewidth(2, 1500)  #mid
             pi.get_servo_pulsewidth(2)
@@ -206,7 +226,7 @@ if __name__ == '__main__':
 
 
             maxDistLeft = getDistance()
-            print("left = ",maxDistLeft)
+            #print("left = ",maxDistLeft)
             
             if (maxDistLeft <=20 and maxDistRight <= 20):
                 goBack()
@@ -215,14 +235,32 @@ if __name__ == '__main__':
 
             elif(maxDistLeft <= maxDistRight):
                 #goRight()
-                pivotRight()
-                time.sleep(1)
+                pivotRight()                
+                time.sleep(rightTurnTime)
+                direction += 1
 
             else:
                 #goLeft()
-                pivotLeft()
-                time.sleep(1)
+                pivotLeft()                
+                time.sleep(leftTurnTime)
+                direction -= 1
         
         else:
-            print("moving Forward")
             goForward()
+            traversedDistance += 1
+            if traversedDistance > gridLength :  
+                traversedDistance = 0              
+                if (direction%4) == 0 :
+                    j += 1
+                elif (direction%4) == 1:
+                    i += 1
+                elif (direction%4) == 2:
+                    j -= 1
+                elif (direction%4) == 3:
+                    i -= 1
+                maze[i][j] = 1
+                print("\t\t",i," ",j)
+                np.savetxt('maze.txt', maze, fmt='%s')
+
+            #print("moving Forward", traversedDistance)
+            
