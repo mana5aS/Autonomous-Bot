@@ -63,204 +63,242 @@ pB=GPIO.PWM(enB,100)
 pA.start(100)
 pB.start(100)
 
-G_length = 80  #full grid length
-gridLength = G_length - minDistance - 10 - 40#effective grid length 10 is leeway
-traversedDistance = 0
-
-row, col = (20,20)
-maze = [[-1 for i in range(col)] for j in range(row)] 
-direction = 0 #  0-forward(+i) 1-right(+j) 2-back(-i) 3-left(-j) 
-i = 0
-j = 0
-maze[0][0] = 2 #2 is home
-
-rightTurnTime = 0.8
+rightTurnTime = 0.78
 leftTurnTime = 0.8
 
+cell= "valid"
 
 
 def goForward():
-    GPIO.output(in1,GPIO.HIGH)
-    GPIO.output(in2,GPIO.LOW)
-    GPIO.output(enA,GPIO.HIGH)
+	GPIO.output(in1,GPIO.HIGH)
+	GPIO.output(in2,GPIO.LOW)
+	GPIO.output(enA,GPIO.HIGH)
 
-    GPIO.output(in3,GPIO.HIGH)
-    GPIO.output(in4,GPIO.LOW)
-    GPIO.output(enB,GPIO.HIGH)
-    
+	GPIO.output(in3,GPIO.HIGH)
+	GPIO.output(in4,GPIO.LOW)
+	GPIO.output(enB,GPIO.HIGH)
+	
 
 def goBack():
-    GPIO.output(in1,GPIO.LOW)
-    GPIO.output(in2,GPIO.HIGH)
-    GPIO.output(enA,GPIO.HIGH)
+	GPIO.output(in1,GPIO.LOW)
+	GPIO.output(in2,GPIO.HIGH)
+	GPIO.output(enA,GPIO.HIGH)
 
-    GPIO.output(in3,GPIO.LOW)
-    GPIO.output(in4,GPIO.HIGH)
-    GPIO.output(enB,GPIO.HIGH)
+	GPIO.output(in3,GPIO.LOW)
+	GPIO.output(in4,GPIO.HIGH)
+	GPIO.output(enB,GPIO.HIGH)
 
-    
+	
 def goLeft():
-    GPIO.output(in1,GPIO.LOW)
-    GPIO.output(in2,GPIO.LOW)
-    GPIO.output(enA,GPIO.HIGH)
+	GPIO.output(in1,GPIO.LOW)
+	GPIO.output(in2,GPIO.LOW)
+	GPIO.output(enA,GPIO.HIGH)
 
-    GPIO.output(in3,GPIO.HIGH)
-    GPIO.output(in4,GPIO.LOW)
-    GPIO.output(enB,GPIO.HIGH)
+	GPIO.output(in3,GPIO.HIGH)
+	GPIO.output(in4,GPIO.LOW)
+	GPIO.output(enB,GPIO.HIGH)
 
 
 def pivotLeft():
-    GPIO.output(in1,GPIO.LOW)
-    GPIO.output(in2,GPIO.HIGH)
-    GPIO.output(enA,GPIO.HIGH)
+	GPIO.output(in1,GPIO.LOW)
+	GPIO.output(in2,GPIO.HIGH)
+	GPIO.output(enA,GPIO.HIGH)
 
-    GPIO.output(in3,GPIO.HIGH)
-    GPIO.output(in4,GPIO.LOW)
-    GPIO.output(enB,GPIO.HIGH)  
+	GPIO.output(in3,GPIO.HIGH)
+	GPIO.output(in4,GPIO.LOW)
+	GPIO.output(enB,GPIO.HIGH) 
+
+	time.sleep(leftTurnTime) 
 
 
 def pivotRight():
-    GPIO.output(in1,GPIO.HIGH)
-    GPIO.output(in2,GPIO.LOW)
-    GPIO.output(enA,GPIO.HIGH) 
+	GPIO.output(in1,GPIO.HIGH)
+	GPIO.output(in2,GPIO.LOW)
+	GPIO.output(enA,GPIO.HIGH) 
 
-    GPIO.output(in3,GPIO.LOW)
-    GPIO.output(in4,GPIO.HIGH)
-    GPIO.output(enB,GPIO.HIGH)
+	GPIO.output(in3,GPIO.LOW)
+	GPIO.output(in4,GPIO.HIGH)
+	GPIO.output(enB,GPIO.HIGH)
 
-    
+	time.sleep(rightTurnTime)
+
+	
 def goRight():
-    GPIO.output(in1,GPIO.HIGH)
-    GPIO.output(in2,GPIO.LOW)
-    GPIO.output(enA,GPIO.HIGH)
+	GPIO.output(in1,GPIO.HIGH)
+	GPIO.output(in2,GPIO.LOW)
+	GPIO.output(enA,GPIO.HIGH)
 
-    GPIO.output(in3,GPIO.LOW)
-    GPIO.output(in4,GPIO.LOW)
-    GPIO.output(enB,GPIO.HIGH)
+	GPIO.output(in3,GPIO.LOW)
+	GPIO.output(in4,GPIO.LOW)
+	GPIO.output(enB,GPIO.HIGH)
 
-    
+	
 def stop():
-    GPIO.output(in1,GPIO.LOW)
-    GPIO.output(in2,GPIO.LOW)
-    GPIO.output(enA,GPIO.HIGH)
+	GPIO.output(in1,GPIO.LOW)
+	GPIO.output(in2,GPIO.LOW)
+	GPIO.output(enA,GPIO.HIGH)
 
-    GPIO.output(in3,GPIO.LOW)
-    GPIO.output(in4,GPIO.LOW)
-    GPIO.output(enB,GPIO.HIGH)
+	GPIO.output(in3,GPIO.LOW)
+	GPIO.output(in4,GPIO.LOW)
+	GPIO.output(enB,GPIO.HIGH)
 
-    
+	
 def getDistance():
-    GPIO.setup(TRIG,GPIO.OUT)
-    GPIO.setup(ECHO,GPIO.IN)
+	GPIO.setup(TRIG,GPIO.OUT)
+	GPIO.setup(ECHO,GPIO.IN)
+	GPIO.output(TRIG,False)
+	time.sleep(0.01)
+	GPIO.output(TRIG,True)
+	time.sleep(0.00001)
+	GPIO.output(TRIG,False)
+	pulse_start = time.time()
+	timeout = pulse_start + maxTime
+	while GPIO.input(ECHO) == 0 and pulse_start < timeout:
+		pulse_start = time.time()
+	pulse_end = time.time()
+	timeout = pulse_end + maxTime
+	while GPIO.input(ECHO) == 1 and pulse_end < timeout:
+		pulse_end = time.time()
+	pulse_duration = pulse_end - pulse_start
+	distance = pulse_duration * 17000
+	distance = round(distance, 2)
+	return  distance
 
-    GPIO.output(TRIG,False)
 
-    time.sleep(0.01)
+def getRightDistance():
+	pi.set_servo_pulsewidth(2, 500)  #right
+	pi.get_servo_pulsewidth(2)
+	time.sleep(2)
+	return(getDistance())
 
-    GPIO.output(TRIG,True)
 
-    time.sleep(0.00001)
+def getLeftDistance():
+	pi.set_servo_pulsewidth(2, 2500) #left
+	pi.get_servo_pulsewidth(2)
+	time.sleep(2)
+	return(getDistance())
 
-    GPIO.output(TRIG,False)
 
-    pulse_start = time.time()
-    timeout = pulse_start + maxTime
-    while GPIO.input(ECHO) == 0 and pulse_start < timeout:
-        pulse_start = time.time()
+def lookStraight():
+	pi.set_servo_pulsewidth(2, 1500)  #mid
+	pi.get_servo_pulsewidth(2)
+	time.sleep(2)
 
-    pulse_end = time.time()
-    timeout = pulse_end + maxTime
-    while GPIO.input(ECHO) == 1 and pulse_end < timeout:
-        pulse_end = time.time()
 
-    pulse_duration = pulse_end - pulse_start
-    distance = pulse_duration * 17000
-    distance = round(distance, 2)
+def updateDirection(i, j, direction) :
+	if (direction%4) == 0:
+		j += 1		
+	elif (direction%4) == 1:
+		i += 1
+	elif (direction%4) == 2:
+		j -= 1
+	elif (direction%4) == 3:
+		i -= 1	
+	return ([i, j])
 
-    return distance
 
+def checkCell(i,j):
+	if maze[i][j] == wall or maze[i][j] == 1 or maze[i][j] == 0: #maze[i][j] >= 0 :     #i in [0,i_max+1] or j in [0,j_max+] (can write this instead of wall)
+		if (direction%4) == 0:
+			j -= 1		
+		elif (direction%4) == 1:
+			i -= 1
+		elif (direction%4) == 2:
+			j += 1
+		elif (direction%4) == 3:
+			i += 1	
+		return (["invalid",i,j])	
+	else:
+		return(["valid",i,j])
+
+count = 0
+minDistance = 10
+cell ="valid"
+traversedDistance = 0
+gridLength = 50
+i_max = 4
+j_max = 4
+row, col = (i_max+2,j_max+2)                                    #refer to mazecode and see the 
+unoccupied = 2	                                                  #and see the output file maze.txt
+maze = [[unoccupied for i in range(col)] for j in range(row)]   #to understance this part
+wall = "*"
+for i in range(i_max+2):                                        #Create maze
+	maze[0][i] = wall
+	maze[i_max+1][i] = wall
+	maze[i][0] = wall
+	maze[i][i_max+1] = wall 
+
+direction = 0 #  0-forward(+j) 1-right(+i) 2-back(-j) 3-left(-i) 
+i = 1
+j = 1
+flag =True
 
 if __name__ == '__main__':
 
-    pi.set_servo_pulsewidth(2, 1500)  #mid
-    pi.get_servo_pulsewidth(2)
-    time.sleep(2)
+	lookStraight()
    
-    while True:
-        distance = getDistance()
-        #print("distance = ",distance)
-        if( distance <= minDistance):
-            stop()
-            maze[i][j] = 0             #mark grid as occupied
-            print("\t\t",i," ",j)
-            np.savetxt('maze.txt', maze, fmt='%s')
-            traversedDistance = 0      #reset
-            print("stop")
-            goBack()
-            time.sleep(0.5)
-            stop()
-            time.sleep(0.5)
-            maxDistLeft = 0
-            maxDistRight = 0
+	while flag:
 
-            time.sleep(0.5)           
+		distance = getDistance()
+		print(traversedDistance,"i=",i,"j=",j,"  ","distance=",distance)		
+		
+		if distance <= minDistance or cell == "invalid" :						
+			stop()			
+			time.sleep(0.5)
+			traversedDistance = -(0*minDistance)      #reset			
+			if cell == "valid":
+				maze[i][j] = 0                        #Obstruction
+				print("00000000000000000000000000000000000000000000000000000000000")
+				np.savetxt('maze.txt', maze, fmt='%s')
+				
 
-            pi.set_servo_pulsewidth(2, 500)  #right
-            pi.get_servo_pulsewidth(2)
-            time.sleep(2)
+			Left_i, Left_j = updateDirection(i,j,direction-1)
+			statusOfLeftCell,_,_ =  checkCell(Left_i,Left_j)
+			Right_i, Right_j = updateDirection(i,j,direction+1)
+			statusOfRightCell,_,_ = checkCell(Right_i,Right_j)
 
-            maxDistRight = getDistance()
-            #print("Right = ",maxDistRight)
+			if statusOfRightCell == "valid" and statusOfLeftCell == "valid" :				
+				maxDistRight = getRightDistance()
+				lookStraight()
+				maxDistLeft = getLeftDistance()
+				lookStraight()
+				if maxDistLeft <= maxDistRight :
+					pivotRight()
+					direction += 1			
+					if cell == "invalid" :
+						i,j = updateDirection(i,j,direction)
+				else :
+					pivotLeft()
+					direction =- 1	
+					if cell == "invalid" :
+						i,j = updateDirection(i,j,direction)				
+			elif statusOfRightCell == "valid" :
+				pivotRight()
+				direction += 1
+				if cell == "invalid" :
+					i,j = updateDirection(i,j,direction)				
+			elif statusOfLeftCell == "valid" :
+				pivotLeft()
+				direction -= 1
+				if cell == "invalid" :
+					i,j = updateDirection(i,j,direction)				
+			else :
+				print("no known path available",i,j,sep="\t")
+				flag = False
+			cell = "valid"                                #reset
 
-            pi.set_servo_pulsewidth(2, 1500)  #mid
-            pi.get_servo_pulsewidth(2)
-            time.sleep(2)
-   
-            pi.set_servo_pulsewidth(2, 2500) #left
-            pi.get_servo_pulsewidth(2)
-            time.sleep(2)
-
-            pi.set_servo_pulsewidth(2, 1500)  #mid
-            pi.get_servo_pulsewidth(2)
-            time.sleep(2)
-
-
-            maxDistLeft = getDistance()
-            #print("left = ",maxDistLeft)
-            
-            if (maxDistLeft <=20 and maxDistRight <= 20):
-                goBack()
-                time.sleep(0.5)
-
-
-            elif(maxDistLeft <= maxDistRight):
-                #goRight()
-                pivotRight()                
-                time.sleep(rightTurnTime)
-                direction += 1
-
-            else:
-                #goLeft()
-                pivotLeft()                
-                time.sleep(leftTurnTime)
-                direction -= 1
-        
-        else:
-            goForward()
-            traversedDistance += 1
-            if traversedDistance > gridLength :  
-                traversedDistance = 0              
-                if (direction%4) == 0 :
-                    j += 1
-                elif (direction%4) == 1:
-                    i += 1
-                elif (direction%4) == 2:
-                    j -= 1
-                elif (direction%4) == 3:
-                    i -= 1
-                maze[i][j] = 1
-                print("\t\t",i," ",j)
-                np.savetxt('maze.txt', maze, fmt='%s')
-
-            #print("moving Forward", traversedDistance)
-            
+		else :
+			goForward()
+			traversedDistance += 1				
+			if traversedDistance > gridLength :	
+				stop()			
+				time.sleep(0.1)
+				traversedDistance = 0
+				#count += 1
+				maze[i][j] = 1  #count                      #path
+				np.savetxt('maze.txt', maze, fmt='%s')				
+				print("old",i,j,count)
+				i,j = updateDirection(i,j,direction)
+				print("\tupdate",i,j,count)
+				cell,i,j = checkCell(i,j)
+				print("\t\taftercheck",cell,i,j,count)		
